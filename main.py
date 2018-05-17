@@ -1,26 +1,31 @@
 #%% ENV
 import pandas as pd
 import matplotlib.pyplot as plt
-%matplotlib inline
 import numpy as np
 from sklearn.preprocessing import MinMaxScaler
 # extra functions
 import dataInOut as myio
 import tsa as mytsa
+import dfEssential as mydf
 # Importing the Keras libraries and packages
 from keras.models import Sequential
 from keras.layers import Dense
 from keras.layers import LSTM
 
+
 #%% DESCR
 '''
 IntProj with Python POC
 just try LSTM from tensorflow, veeery simple exercise
+https://machinelearningmastery.com/\
+time-series-forecasting-long-short-term-memory-network-python/
 '''
 
 #%% SETTING
 country_key = 826
 domain_product_group_name = "SMARTPHONES"
+
+validation_step = forecast_step = 24
 
 #%% INPUT
 # retrieve actual
@@ -42,29 +47,25 @@ right_type = {
 
 df = df.astype(right_type)
 
-print('---Dataset---')
-print('-> General Info')
-print(df.info())
-print("=============================================================")
-print(df.describe(include = "all"))
-print("=============================================================")
-print(df.head(5))
-print("=============================================================")
-print(df.tail(5))
-print("=============================================================")
+# print some general info
+mydf.df_printGeneralInfo(df)
+
+# check missing value
+df_missing = mydf.df_checkMissing(df)
 
 
 #%% PREP
 df.index = pd.to_datetime(df["DateKey"].values,format = "%Y%m%d")
 
+# the index of the df has to be the date
 series = mytsa.df_col2Series(df,"TotalUnitsSold")
 
 #%% MAIN
 # split data
-forecast_step = 24
-series_train = series[:len(series)-forecast_step]
-series_test = series[len(series)-forecast_step:]
+series_train, series_test = mydf.df_splitDataset(series,forecast_step) 
 
+
+    
 # Data preprocess
 training_set = series_train.values
 training_set = np.reshape(training_set, (len(training_set), 1))
