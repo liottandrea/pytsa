@@ -5,6 +5,7 @@ import numpy as np
 from sklearn.preprocessing import MinMaxScaler
 # extra functions
 import dataInOut as myio
+import gfkInOut as gfk
 import tsa as mytsa
 import dfEssential as mydf
 # Importing the Keras libraries and packages
@@ -29,30 +30,10 @@ validation_step = forecast_step = 24
 
 #%% INPUT
 # retrieve actual
-# Create the sql string
-sql_string = "dpretailer.uspRetrieveDPRetailerActuals \
-    @DomainProductGroupName = '%s', @CountryISOCode = %s"                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              % (
-    domain_product_group_name, country_key)
-# fire store proc
-df = myio.odbc_StoreProc2Df(sql_string)
-
-# I think that sometime we have a problem in identify the right type
-right_type = {
-    "CountryISOCode": "int64",
-    "DateKey": "int64",
-    "DomainProductGroupName": "category",
-    "DistributionTypeName": "category",
-    "TotalUnitsSold": "float",
-    "TotalValueLocal": "float"}
-
-df = df.astype(right_type)
-
-# print some general info
-mydf.df_printGeneralInfo(df)
+df = gfk.dpr_retrieveActual(country_key, domain_product_group_name)
 
 # check missing value
 df_missing = mydf.df_checkMissing(df)
-
 
 #%% PREP
 df.index = pd.to_datetime(df["DateKey"].values,format = "%Y%m%d")
@@ -65,7 +46,6 @@ series = mytsa.df_col2Series(df,"TotalUnitsSold")
 series_train, series_test = mydf.df_splitDataset(series,forecast_step) 
 
 
-    
 # Data preprocess
 training_set = series_train.values
 training_set = np.reshape(training_set, (len(training_set), 1))
